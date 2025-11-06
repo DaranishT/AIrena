@@ -1,20 +1,9 @@
 {
-  "name": "rl-maze-trainer",
+  "name": "rl-maze-trainer-web",
   "type": "module",
   "scripts": {
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "build:frontend": "cd frontend && npm run build",
-    "start": "cd backend && npm start"
-  },
-  "dependencies": {
-    "uuid": "^9.0.1",
-    "archiver": "^6.0.1",
-    "@supabase/supabase-js": "^2.26.0"
-  },
-  "devDependencies": {
-    "concurrently": "^7.6.0"
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm run preview"
   }
 }
-  

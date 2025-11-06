@@ -3,11 +3,200 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RL Maze Trainer - Download Portal</title>
+    <title>AIrena</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrambleTextPlugin.min.js"></script>
+
+    <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-    <div id="app"></div>
+
+    <div class="loading-container">
+      <div class="loading__border-progress loading__border-top"></div>
+      <div class="loading__border-progress loading__border-right"></div>
+      <div class="loading__border-progress loading__border-bottom"></div>
+      <div class="loading__border-progress loading__border-left"></div>
+      <div class="loading-screen">
+        <div class="loading__percentage">0</div>
+        <div class="loading__text">Loading</div>
+      </div>
+    </div>
+    
+    <div id="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="#home"><h1>AIrena</h1></a>
+                    <p class="fade-in">(...you know, AI and Arena?)</p>
+                </div>
+                <nav class="fade-in">
+                    <a href="#project">The Project</a>
+                    <a href="#about">About RL</a>
+                    <a href="#environment">Environment</a>
+                    <a href="#dungeon">Dungeon</a>
+                    <a href="#training">Training</a>
+                    <a href="#download">Download</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main-content">
+
+            <section id="project" class="content-section hero-section">
+                <div class="hero-content">
+                    <h1 class="animated-heading hero-title">Reinforcement Learning, Simplified.</h1>
+                    
+                    <p class="hero-subtitle">
+                        <span id="scramble-text">AI training without the setup.</span>
+                    </p>
+                    
+                    <p class="fade-in hero-subtitle-expanded">
+                        AIrena bridges the gap between complex AI research and hands-on learning. 
+                        It's a complete, self-contained package that lets you run and visualize a real Python AI agent 
+                        in a 3D environment. No complex software, no managing dependencies—just
+                        a simple GUI and your browser. This project is built for students, hobbyists, 
+                        and anyone curious about how AI *really* learns.
+                    </p>
+
+                    <div class="hero-actions fade-in">
+                        <a href="#about" class="btn btn-primary btn-large">Explore the Technology</a>
+                        <a href="#download" class="btn btn-outline btn-large">Get Started</a>
+                    </div>
+                </div>
+            </section>
+            <section id="about" class="content-section">
+                <h2 class="animated-heading">What is Reinforcement Learning?</h2>
+                <p class="fade-in">
+                    Reinforcement Learning (RL) is a type of machine learning where an agent learns to
+                    make optimal decisions by interacting with its environment. Think of it like training a dog:
+                    the agent takes an action (like 'sit') and receives a **reward** (a treat) or a **penalty** (a "no").
+                    Over millions of trials, it builds a 'policy'—a strategy to maximize its cumulative reward.
+                </p>
+                <a href="#environment" class="btn btn-outline fade-in">See The Environment</a>
+            </section>
+            
+            <section id="environment" class="content-section">
+                <h2 class="animated-heading">The 3D Web Environment</h2>
+                <p class="fade-in">
+                    The "arena" in AIrena is a custom-built 3D world, streamed directly to your browser.
+                    It's powered by <strong>Three.js</strong>, the standard for 3D web graphics, which handles
+                    the rendering of the agent and the world. To make interactions realistic, the environment uses
+                    <strong>Ammo.js</strong> (a direct port of the Bullet physics engine) for collision detection and physics.
+                </p>
+            </section>
+
+            <section id="dungeon" class="content-section content-section-split">
+                <div class="text-content fade-in">
+                    <h2 class="animated-heading">A New Challenge, Every Time</h2>
+                    <p>
+                        An agent that only masters one level isn't truly intelligent. To ensure the AI
+                        learns to *generalize*, AIrena's environment is procedurally generated for every
+                        training run using the "Rooms and Mazes" algorithm.
+                    </p>
+                    <ul>
+                        <li>Placing random-sized rooms on the map.</li>
+                        <li>Filling all remaining space with perfect mazes.</li>
+                        <li>Finding all "connectors" (walls between two regions).</li>
+                        <li>Opening connectors to merge all regions into one.</li>
+                        <li>Removing dead-ends to create a more open map.</li>
+                    </ul>
+                </div>
+                <div class="media-content fade-in">
+                    <figure>
+                        <canvas id="enchilada" width="992" height="744">
+                            Sorry, you need canvas support for this demo.
+                        </canvas>
+                    </figure>
+                    <p><em>Click the demo to regenerate.</em></p>
+                </div>
+            </section>
+
+            <section id="training" class="content-section content-section-split reversed">
+                <div class="media-content fade-in">
+                    <div class="placeholder-box">
+                        <p>Placeholder for training footage (Video/GIF)</p>
+                    </div>
+                </div>
+                <div class="text-content fade-in">
+                    <h2 class="animated-heading">The Brain and The Body</h2>
+                    <p>
+                        AIrena runs as two connected parts. The "Brain" is a powerful <strong>Python</strong> agent
+                        using the <strong>Stable Baselines3</strong> library to run algorithms like PPO. The "Body"
+                        is the 3D web visualizer. A WebSocket connects them, allowing the Python agent to
+                        send its actions (like 'move forward') and receive its 'senses' (like wall distance)
+                        to learn from.
+                    </p>
+                    <div class="placeholder-data">
+                        <p><strong>Algorithm:</strong> PPO</p>
+                        <p><strong>Total Timesteps:</strong> 1,000,000</p>
+                        <p><strong>Mean Reward:</strong> +250.75</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="download" class="content-section">
+                <h2 class="animated-heading">Download the Project</h2>
+                <p class="fade-in">
+                    Get the latest stable release from the GitHub repository.
+                    The package includes the GUI, the Python trainer, and the web environment.
+                    No installation required.
+                </p>
+                <a href="https://github.com/YOUR-USERNAME/YOUR-REPO/releases" target="_blank" class="btn btn-primary btn-large fade-in">
+                    ⬇️ Download Latest Release
+                </a>
+            </section>
+
+        </main>
+    </div>
+    
     <script type="module" src="/src/main.js"></script>
+
+    <div style="display: none;">
+        <figure>
+          <canvas id="rooms"></canvas>
+          <label for="attempts">Attempts:</label>
+          <input type="range" id="attempts" min="1" value="20" max="1000">
+          <output for="attempts" id="attempts-output">20</output>
+        </figure>
+        <figure>
+          <canvas id="dead-ends"></canvas>
+          <label for="dead-end-remove">Dead ends to remove:</label>
+          <input type="range" id="dead-end-remove" min="1" value="500" max="2400">
+          <output for="dead-end-remove" id="dead-end-remove-output">500</output>
+        </figure>
+        <figure>
+          <canvas id="maze-fill"></canvas>
+        </figure>
+        <figure>
+          <canvas id="connectors"></canvas>
+        </figure>
+        <figure>
+          <canvas id="giant"></canvas>
+          <label for="giant-rooms">Rooms:</label>
+          <input type="range" id="giant-rooms" min="1" value="1000" max="10000">
+          <output for="giant-rooms" id="giant-rooms-output">1000</output>
+          <label for="giant-room-size">Max room size:</label>
+          <input type="range" id="giant-room-size" min="5" value="10" max="40">
+          <output for="giant-room-size" id="giant-room-size-output">10</output>
+          <label for="giant-wiggle">Wiggle:</label>
+          <input type="range" id="giant-wiggle" min="0" value="50" max="100">
+          <output for="giant-wiggle" id="giant-wiggle-output">50</output>
+          <label for="giant-speed">Speed:</label>
+          <input type="range" id="giant-speed" min="1" value="10" max="100">
+          <output for="giant-speed" id="giant-speed-output">10</output>
+        </figure>
+    </div>
+
+    <script src="/main.dart.js"></script>
 </body>
 </html>

@@ -1,475 +1,319 @@
 // src/main.js
 import './style.css'
 
-// API integration class to communicate with the backend
-class PackageAPI {
-    static baseURL = '/api';
+// ====================================================================
+// === YOUR UI ENHANCEMENT CODE
+// ====================================================================
 
-    static async generatePackage(config) {
-        console.log('Sending config to backend:', config);
-        const response = await fetch(`${this.baseURL}/generate-package`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ config })
-        });
-    
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server error: ${response.status} - ${errorText}`);
-        }
-    
-        // ✅ Now the backend returns { success, packageId, downloadUrl }
-        return response.json();
-    }
+/**
+ * Initializes Lenis for smooth scrolling
+ */
+function initLenis() {
+  const lenis = new Lenis();
+  // Make Lenis work with GSAP's ScrollTrigger
+  lenis.on('scroll', ScrollTrigger.update)
+  gsap.ticker.add((time)=>{
+    lenis.raf(time * 1000)
+  })
+  gsap.ticker.lagSmoothing(0)
 
-    static async downloadPackage(packageId) {
-        // This function is no longer called by the primary download button,
-        // but we leave the old logic here in case it's used elsewhere.
-        // The new `downloadPackage` in RLMTApp handles the Supabase link.
-        const response = await fetch(`${this.baseURL}/download/${packageId}`);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Download failed: ${response.status} - ${errorText}`);
-        }
-        
-        // Get filename from Content-Disposition header or use default
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = `RLMazeTrainer_${Date.now()}.zip`;
-        
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-            if (filenameMatch) {
-                filename = filenameMatch[1];
-            }
-        }
-        
-        // Create download
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        return { success: true, filename };
-    }
+  // Make anchor links work with Lenis
+  document.querySelectorAll('a[href^="#"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const href = el.getAttribute("href");
+      const target = document.querySelector(href);
+      if(target) {
+        lenis.scrollTo(target);
+      }
+    });
+  });
 }
 
+/**
+ * Updates active navigation link based on scroll position
+ */
+function initActiveNavigation() {
+  const sections = document.querySelectorAll('.content-section');
+  const navLinks = document.querySelectorAll('nav a');
 
-// Main application class
-class RLMTApp {
-    constructor() {
-        this.currentUser = null;
-        this.currentView = 'login';
-        this.appConfig = {
-            mazeRooms: 5,
-            trainingSteps: 10000,
-            algorithm: 'PPO',
-            saveLocation: 'local', // Updated default
-            autoStart: true
-        };
-        
-        this.generatedPackageId = null; // To store the ID from the backend
-        this.generatedPackageSize = null; // To store the generated package size
-        this.latestDownloadUrl = null; // ← ADDED THIS PROPERTY
-        this.loadingOverlayRemover = null; // To manage the loading overlay
-        
-        this.init();
-    }
-    
-    init() {
-        this.render();
-        this.checkAuthStatus();
-    }
-    
-    checkAuthStatus() {
-        // Check if user is already logged in (for demo purposes)
-        const savedUser = localStorage.getItem('rlmt_user');
-        if (savedUser) {
-            this.currentUser = JSON.parse(savedUser);
-            this.navigateTo('configurator');
-        }
-    }
-    
-    navigateTo(view) {
-        this.currentView = view;
-        this.render();
-    }
-    
-    handleLogin(userData) {
-        this.currentUser = userData;
-        localStorage.setItem('rlmt_user', JSON.stringify(userData));
-        this.navigateTo('configurator');
-    }
-    
-    handleLogout() {
-        this.currentUser = null;
-        localStorage.removeItem('rlmt_user');
-        this.navigateTo('login');
-    }
-    
-    updateConfig(newConfig) {
-        this.appConfig = { ...this.appConfig, ...newConfig };
-        this.render();
-    }
-    
-    render() {
-        const app = document.getElementById('app');
-        app.innerHTML = this.getCurrentView();
-    }
-    
-    getCurrentView() {
-        const header = this.renderHeader();
-        const mainContent = this.renderMainContent();
-        
-        return `
-            <div class="app">
-                ${header}
-                <main class="main-content">
-                    ${mainContent}
-                </main>
-            </div>
-        `;
-    }
-    
-    renderHeader() {
-        return `
-            <header class="header">
-                <div class="header-content">
-                    <div class="logo">
-                        <h1>🎮 RL Maze Trainer</h1>
-                        <p>Train AI Agents in 3D Mazes</p>
-                    </div>
-                    ${this.currentUser ? `
-                        <div class="user-menu">
-                            <span>Welcome, ${this.currentUser.name}</span>
-                            <button class="btn btn-outline" onclick="app.handleLogout()">Logout</button>
-                        </div>
-                    ` : ''}
-                </div>
-            </header>
-        `;
-    }
-    
-    renderMainContent() {
-        switch (this.currentView) {
-            case 'login':
-                return this.renderLogin();
-            case 'configurator':
-                return this.renderConfigurator();
-            case 'download':
-                return this.renderDownload();
-            default:
-                return this.renderLogin();
-        }
-    }
-    
-    renderLogin() {
-        return `
-            <div class="login-container">
-                <div class="login-card">
-                    <h2>Welcome to RL Maze Trainer</h2>
-                    <p>Login to download your customized AI training package</p>
-                    
-                    <form class="login-form" onsubmit="app.handleLoginForm(event)">
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" required placeholder="Enter your email">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" id="password" required placeholder="Enter your password">
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-full">Login</button>
-                    </form>
-                    
-                    <div class="login-footer">
-                        <p>Don't have an account? <a href="#" onclick="app.handleSignup()">Sign up here</a></p>
-                    </div>
-                    
-                    <div class="demo-note">
-                        <p><strong>Demo:</strong> Use any email/password to login</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    renderConfigurator() {
-        return `
-            <div class="configurator">
-                <div class="config-header">
-                    <h2>Configure Your Training Package</h2>
-                    <p>Customize your AI maze training experience</p>
-                </div>
-                
-                <div class="config-grid">
-                    <!-- Maze Configuration -->
-                    <div class="config-card">
-                        <h3>🏰 Maze Settings</h3>
-                        <div class="form-group">
-                            <label for="mazeRooms">Number of Rooms: <span id="roomsValue">${this.appConfig.mazeRooms}</span></label>
-                            <input type="range" id="mazeRooms" min="1" max="20" value="${this.appConfig.mazeRooms}" 
-                                   oninput="app.updateSlider('roomsValue', this.value, 'mazeRooms')">
-                            <div class="slider-labels">
-                                <span>Simple</span>
-                                <span>Complex</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Training Configuration -->
-                    <div class="config-card">
-                        <h3>🤖 Training Settings</h3>
-                        <div class="form-group">
-                            <label for="trainingSteps">Training Steps</label>
-                            <select id="trainingSteps" onchange="app.updateConfig({trainingSteps: parseInt(this.value)})">
-                                <option value="5000" ${this.appConfig.trainingSteps === 5000 ? 'selected' : ''}>5,000 (Quick)</option>
-                                <option value="10000" ${this.appConfig.trainingSteps === 10000 ? 'selected' : ''}>10,000 (Standard)</option>
-                                <option value="20000" ${this.appConfig.trainingSteps === 20000 ? 'selected' : ''}>20,000 (Extended)</option>
-                                <option value="50000" ${this.appConfig.trainingSteps === 50000 ? 'selected' : ''}>50,000 (Comprehensive)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="algorithm">AI Algorithm</label>
-                            <select id="algorithm" onchange="app.updateConfig({algorithm: this.value})">
-                                <option value="PPO" ${this.appConfig.algorithm === 'PPO' ? 'selected' : ''}>PPO (Recommended)</option>
-                                <option value="A2C" ${this.appConfig.algorithm === 'A2C' ? 'selected' : ''}>A2C</option>
-                                <option value="DQN" ${this.appConfig.algorithm === 'DQN' ? 'selected' : ''}>DQN</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- System Configuration -->
-                    <div class="config-card">
-                        <h3>⚙️ System Settings</h3>
-                        <div class="form-group">
-                            <label for="saveLocation">Save Models To</label>
-                            <select id="saveLocation" onchange="app.updateConfig({saveLocation: this.value})">
-                                <option value="local" ${this.appConfig.saveLocation === 'local' ? 'selected' : ''}>Package Folder</option>
-                                <option value="documents" ${this.appConfig.saveLocation === 'documents' ? 'selected' : ''}>Documents Folder</option>
-                                <option value="desktop" ${this.appConfig.saveLocation === 'desktop' ? 'selected' : ''}>Desktop</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" ${this.appConfig.autoStart ? 'checked' : ''} 
-                                       onchange="app.updateConfig({autoStart: this.checked})">
-                                <span>Auto-start training when launched</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="config-summary">
-                    <h3>Package Summary</h3>
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <strong>Maze Complexity:</strong>
-                            <span>${this.appConfig.mazeRooms} rooms</span>
-                        </div>
-                        <div class="summary-item">
-                            <strong>Training Duration:</strong>
-                            <span>${this.appConfig.trainingSteps.toLocaleString()} steps</span>
-                        </div>
-                        <div class="summary-item">
-                            <strong>AI Algorithm:</strong>
-                            <span>${this.appConfig.algorithm}</span>
-                        </div>
-                        <div class="summary-item">
-                            <strong>File Size:</strong>
-                            <span>~15 MB</span>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-primary btn-large" onclick="app.generatePackage()">
-                        🚀 Generate & Download Package
-                    </button>
+  function updateActiveLink() {
+    let current = 'project'; // Default to 'project'
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.clientHeight;
+      
+      // 200px offset to trigger link change a bit early
+      if (window.scrollY >= sectionTop - 200) {
+        current = section.getAttribute('id');
+      }
+    });
 
-                    <div class="download-info-list">
-                        <p><strong>What you'll get:</strong></p>
-                        <ul>
-                            <li>Complete RL Maze Trainer application</li>
-                            <li>Graphical control panel (no command line needed)</li>
-                            <li>Pre-configured with your settings</li>
-                            <li>No installation required - just extract and run</li>
-                            <li>All dependencies included</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    renderDownload() {
-        if (!this.generatedPackageId) {
-            return this.renderConfigurator();
-        }
-        
-        const fileSize = this.generatedPackageSize ? `~${this.generatedPackageSize} MB` : 'Calculating...';
-        
-        return `
-            <div class="download-container">
-                <div class="download-card">
-                    <div class="download-icon">📦</div>
-                    <h2>Your Package is Ready!</h2>
-                    <p>Your customized RL Maze Trainer has been generated successfully.</p>
-                    
-                    <div class="download-info">
-                        <div class="info-item">
-                            <strong>Filename:</strong>
-                            <span>RLMazeTrainer_${this.currentUser.name.replace(/\s+/g, '')}.zip</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Size:</strong>
-                            <span>${fileSize}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Configuration:</strong>
-                            <span>${this.appConfig.mazeRooms} rooms, ${this.appConfig.trainingSteps.toLocaleString()} steps, ${this.appConfig.algorithm}</span>
-                        </div>
-                    </div>
-                    
-                    <div classV="download-actions">
-                        <button class="btn btn-primary btn-large" onclick="app.downloadPackage()">
-                            ⬇️ Download Now
-                        </button>
-                        <button class="btn btn-outline" onclick="app.navigateTo('configurator')">
-                            ← Back to Configurator
-                        </button>
-                    </div>
-                    
-                    <div class="download-instructions">
-                        <h4>How to use:</h4>
-                        <ol>
-                            <li><strong>Extract</strong> the ZIP file to any folder</li>
-                            <li><strong>Run</strong> start-gui.bat (Windows) for the graphical interface</li>
-                            <li><strong>Click</strong> "START TRAINING" in the control panel</li>
-                            <li><strong>Watch</strong> the AI learn in real-time with live logs</li>
-                            <li>No installation required - everything is self-contained!</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // --- Event Handlers & API Methods ---
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('active');
+      }
+    });
+  }
 
-    handleLoginForm(event) {
-        event.preventDefault();
-        const email = document.getElementById('email').value;
-        const name = email.split('@')[0];
-        
-        this.handleLogin({
-            email: email,
-            name: name.charAt(0).toUpperCase() + name.slice(1),
-            id: Date.now().toString()
-        });
-    }
-    
-    handleSignup() {
-        alert('Signup functionality would be implemented here! For demo, use any email/password.');
-    }
-    
-    updateSlider(displayId, value, configKey) {
-        document.getElementById(displayId).textContent = value;
-        this.updateConfig({ [configKey]: parseInt(value) });
-    }
-    
-    async generatePackage() {
-        const hideLoading = this.showLoading("Generating your customized package...");
-        try {
-            // 1️⃣ Call backend
-            const result = await PackageAPI.generatePackage(this.appConfig);
-    
-            // 2️⃣ Save returned info
-            this.generatedPackageId = result.packageId;
-            this.generatedPackageSize = result.size; // Save size if returned
-            this.latestDownloadUrl = result.downloadUrl; // ← SAVE THE SUPABASE URL HERE
-    
-            // 3️⃣ Direct download (optional automatic download)
-            const a = document.createElement('a');
-            a.href = this.latestDownloadUrl;
-            a.download = `RLMazeTrainer_${this.currentUser?.name || 'User'}.zip`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-    
-            // 4️⃣ Navigate to "Download" view if you still want the download screen
-            this.navigateTo('download');
-    
-        } catch (error) {
-            this.showError("Failed to generate package: " + error.message);
-        } finally {
-            hideLoading();
-        }
-    }
-    
-    async downloadPackage() {
-        if (!this.latestDownloadUrl) {
-            this.showError("No download link available.");
-            return;
-        }
-        // Directly open the Supabase link
-        window.open(this.latestDownloadUrl, "_blank");
-    }
-
-    // --- UI Utility Methods ---
-
-    showLoading(message) {
-        // Remove any existing loader
-        this.hideLoading();
-        
-        const loader = document.createElement('div');
-        loader.className = 'loading-overlay';
-        loader.innerHTML = `
-            <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <p>${message}</p>
-            </div>
-        `;
-        document.body.appendChild(loader);
-        // Store a reference to the remove function
-        const remover = () => {
-            if (document.body.contains(loader)) {
-                document.body.removeChild(loader);
-            }
-        };
-        this.loadingOverlayRemover = remover;
-        return remover; // Return the function for more direct control if needed
-    }
-
-    hideLoading() {
-        if (this.loadingOverlayRemover) {
-            this.loadingOverlayRemover();
-            this.loadingOverlayRemover = null;
-        }
-    }
-    
-    showError(message) {
-        // A more advanced app might use a modal, but alert is fine for now.
-        this.hideLoading(); // Ensure loading is hidden on error
-        alert("ERROR: " + message);
-    }
-    
-    showSuccess(message) {
-        // A more advanced app might use a modal.
-        this.hideLoading(); // Ensure loading is hidden on success
-        alert("SUCCESS: " + message);
-    }
+  window.addEventListener('scroll', updateActiveLink);
+  updateActiveLink(); // Initial check
 }
 
-// Initialize the app
-const app = new RLMTApp();
-window.app = app;
+/**
+ * Initializes the custom "difference" cursor
+ */
+function initCustomCursor() {
+  const cursor = document.createElement('div');
+  cursor.style.cssText = `
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 75px;
+    height: 75px;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    z-index: 9999;
+    display: none;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+  `;
+  document.body.appendChild(cursor);
 
+  let mouseX = 0, mouseY = 0;
+  let cursorX = 0, cursorY = 0;
+  const speed = 0.1;
+  document.addEventListener('mousemove', (e) => {
+    if (window.innerWidth > 768) {
+      cursor.style.display = 'block';
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    } else {
+      cursor.style.display = 'none';
+    }
+  });
+  function updateCursor() {
+    if (cursor.style.display !== 'none') {
+      cursorX += (mouseX - cursorX) * speed;
+      cursorY += (mouseY - cursorY) * speed;
+      cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
+    }
+    requestAnimationFrame(updateCursor);
+  }
+  updateCursor();
 
+  // Apply cursor interactions
+  document.querySelectorAll('a, button, .btn, nav a, .logo a, .logo p, canvas').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '15px';
+      cursor.style.height = '15px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '75px';
+      cursor.style.height = '75px';
+    });
+  });
+}
+
+/**
+ * Loading animation with full border fill synced with percentage
+ */
+function initLoaderKauStyle() { 
+  // Create a main timeline
+  const tl = gsap.timeline();
+  // Get the percentage element
+  const percentageEl = document.querySelector('.loading__percentage');
+  
+  // STARTING STATE - Hide everything initially
+  tl.set(".loading-container", { autoAlpha: 1 })
+    .set([
+      ".loading__border-top", 
+      ".loading__border-right", 
+      ".loading__border-bottom", 
+      ".loading__border-left"
+    ], { 
+      scaleX: 0, 
+      scaleY: 0 
+    })
+    .set(".loading__percentage", { textContent: "0" })
+    .set(".loading-screen", { scale: 0.9, autoAlpha: 0 });
+
+  // Fade in the loading content
+  tl.to(".loading-screen", { 
+    scale: 1, 
+    autoAlpha: 1, 
+    duration: 0.8, 
+    ease: "power2.out" 
+  });
+
+  // Animate all borders simultaneously with percentage
+  const loadingDuration = 3; // Total loading duration in seconds
+  
+  // Animate borders to fill based on percentage
+  tl.to([
+    ".loading__border-top", 
+    ".loading__border-right", 
+    ".loading__border-bottom", 
+    ".loading__border-left"
+  ], {
+    keyframes: [
+      { scaleX: 0.25, scaleY: 0.25, duration: loadingDuration * 0.25 },
+      { scaleX: 0.5, scaleY: 0.5, duration: loadingDuration * 0.25 },
+      { scaleX: 0.75, scaleY: 0.75, duration: loadingDuration * 0.25 },
+      { scaleX: 1, scaleY: 1, duration: loadingDuration * 0.25 }
+    ],
+    ease: "power2.inOut"
+  }, 0);
+
+  // Update percentage counter in sync with borders
+  tl.to(percentageEl, {
+    textContent: 100,
+    duration: loadingDuration,
+    snap: { textContent: 1 },
+    modifiers: {
+      textContent: function(value) {
+        return Math.round(value) + "";
+      }
+    },
+    ease: "none"
+  }, 0);
+
+  // Add a subtle pulse animation to the percentage
+  tl.to(percentageEl, {
+    scale: 1.05,
+    duration: 0.2,
+    repeat: 3,
+    yoyo: true,
+    ease: "power2.inOut"
+  }, `+=0.3`);
+
+  // EXIT ANIMATION
+  tl.to(".loading-screen", {
+    scale: 1.1,
+    autoAlpha: 0,
+    duration: 0.6,
+    ease: "power2.in"
+  })
+  .to(".loading-container", {
+    autoAlpha: 0,
+    duration: 0.4,
+    ease: "power2.in"
+  }, "-=0.3")
+  .set(".loading-container", { display: "none" });
+
+  // Return the timeline so we can chain animations
+  return tl;
+}
+
+/**
+ * Finds and animates all elements with .animated-heading or .fade-in
+ * --- MODIFIED to exclude hero section ---
+ */
+function initScrollAnimations() {
+  // Animate elements in each section *except* the hero
+  document.querySelectorAll('.content-section:not(.hero-section)').forEach((section) => {
+    
+    // 1. Animate Headings (word by word)
+    const headings = section.querySelectorAll(".animated-heading");
+    if (headings.length > 0) {
+      let mySplitText = new SplitText(headings, { type: "words, chars" });
+      let chars = mySplitText.chars;
+
+      gsap.set(headings, { visibility: "visible" });
+      gsap.set(chars, { autoAlpha: 0, y: 20 });
+
+      gsap.to(chars, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: 0.02,
+        ease: "power2.out",
+        scrollTrigger: {
+            trigger: section, 
+            start: "top 70%", 
+            toggleActions: "play none none none"
+        }
+      });
+    }
+
+    // 2. Animate Simple Fade-ins
+    const elementsToFade = section.querySelectorAll(".fade-in");
+    if (elementsToFade.length > 0) {
+      gsap.to(elementsToFade, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "power2.out",
+        scrollTrigger: {
+            trigger: section, 
+            start: "top 70%",
+            toggleActions: "play none none none"
+        }
+      });
+    }
+  });
+}
+
+/**
+ * === NEW FUNCTION TO ANIMATE HERO ===
+ * Animates the hero title, subtitle, and buttons after the loader.
+ */
+function initHeroAnimations() {
+  const heroTl = gsap.timeline();
+  
+  // 1. Animate Hero Title
+  const heroTitle = document.querySelector(".hero-title");
+  if (heroTitle) {
+    let mySplitText = new SplitText(heroTitle, { type: "words, chars" });
+    let chars = mySplitText.chars;
+    gsap.set(heroTitle, { visibility: "visible" });
+    heroTl.to(chars, { 
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.6,
+      stagger: 0.02,
+      ease: "power2.out"
+    });
+  }
+
+  // 2. Animate Subtitle and Buttons (fade in)
+  // We select *only* the fade-in elements in the hero section
+  const heroFades = document.querySelectorAll(".hero-section .fade-in");
+  if (heroFades.length > 0) {
+     // Manually set them to their "before" state
+     gsap.set(heroFades, { autoAlpha: 0, y: 20 });
+     
+     heroTl.to(heroFades, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "power2.out"
+     }, "-=0.5"); // Overlap with title
+  }
+}
+
+// === INITIALIZE EVERYTHING ONCE THE PAGE LOADS ===
+document.addEventListener("DOMContentLoaded", () => {
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+  initLenis();
+  initCustomCursor();
+  
+  // Run the loader and get its timeline
+  const loaderTl = initLoaderKauStyle();
+  
+  initActiveNavigation();
+  
+  // Set up scroll animations for *other* sections
+  initScrollAnimations(); 
+  
+  // Chain the hero animations to the *end* of the loader
+  loaderTl.then(initHeroAnimations);
+
+  // Play the loader
+  loaderTl.play(); 
+});
