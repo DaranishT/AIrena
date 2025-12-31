@@ -1,5 +1,5 @@
 {
-  "name": "rl-maze-trainer-web",
+  "name": "airena-web",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -12,6 +12,5 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "lucide-react": "latest"
   }
 }

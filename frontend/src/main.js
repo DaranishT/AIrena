@@ -2,20 +2,83 @@
 import './style.css'
 
 // ====================================================================
-// === YOUR UI ENHANCEMENT CODE
+// === MAIN JAVASCRIPT LOGIC
 // ====================================================================
 
-/**
- * Initializes Lenis for smooth scrolling
- */
+document.addEventListener("DOMContentLoaded", () => {
+  // Register GSAP plugins (removed SplitText dependency)
+  gsap.registerPlugin(ScrollTrigger);
+  
+  // Initialize systems
+  initCursor();
+  initLenis();
+  
+  // Start the loader animation
+  const loaderTl = initLoaderKauStyle();
+  
+  // Init navigation active states
+  initActiveNavigation();
+  
+  // Init scroll animations for sections
+  initScrollAnimations();
+  
+  // Chain hero animations to run after loader
+  loaderTl.then(initHeroAnimations);
+  
+  // Play the loader sequence
+  loaderTl.play();
+});
+
+// --- Custom Cursor ---
+function initCursor() {
+  const cursorDot = document.querySelector('.cursor-dot');
+  const cursorOutline = document.querySelector('.cursor-outline');
+
+  if(!cursorDot || !cursorOutline) return;
+
+  window.addEventListener('mousemove', (e) => {
+    const posX = e.clientX;
+    const posY = e.clientY;
+
+    cursorDot.style.left = `${posX}px`;
+    cursorDot.style.top = `${posY}px`;
+
+    cursorOutline.animate({
+      left: `${posX}px`,
+      top: `${posY}px`
+    }, { duration: 500, fill: 'forwards' });
+  });
+
+  // Hover effects
+  const interactiveElements = document.querySelectorAll('a, button, .btn, .media-content, .tech-item, .rl-concept');
+  interactiveElements.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursorOutline.style.width = '60px';
+      cursorOutline.style.height = '60px';
+      cursorOutline.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursorOutline.style.width = '40px';
+      cursorOutline.style.height = '40px';
+      cursorOutline.style.backgroundColor = 'transparent';
+    });
+  });
+}
+
+// --- Lenis Smooth Scroll ---
 function initLenis() {
-  const lenis = new Lenis();
-  // Make Lenis work with GSAP's ScrollTrigger
-  lenis.on('scroll', ScrollTrigger.update)
+  const lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smooth: true
+  });
+
+  lenis.on('scroll', ScrollTrigger.update);
+
   gsap.ticker.add((time)=>{
-    lenis.raf(time * 1000)
-  })
-  gsap.ticker.lagSmoothing(0)
+    lenis.raf(time * 1000);
+  });
+  gsap.ticker.lagSmoothing(0);
 
   // Make anchor links work with Lenis
   document.querySelectorAll('a[href^="#"]').forEach(el => {
@@ -30,21 +93,16 @@ function initLenis() {
   });
 }
 
-/**
- * Updates active navigation link based on scroll position
- */
+// --- Active Navigation ---
 function initActiveNavigation() {
   const sections = document.querySelectorAll('.content-section');
   const navLinks = document.querySelectorAll('nav a');
 
   function updateActiveLink() {
-    let current = 'project'; // Default to 'project'
+    let current = 'project'; 
     sections.forEach(section => {
       const sectionTop = section.offsetTop;
-      const sectionHeight = section.clientHeight;
-      
-      // 200px offset to trigger link change a bit early
-      if (window.scrollY >= sectionTop - 200) {
+      if (window.scrollY >= sectionTop - 300) {
         current = section.getAttribute('id');
       }
     });
@@ -58,107 +116,28 @@ function initActiveNavigation() {
   }
 
   window.addEventListener('scroll', updateActiveLink);
-  updateActiveLink(); // Initial check
+  updateActiveLink(); 
 }
 
-/**
- * Initializes the custom "difference" cursor
- */
-function initCustomCursor() {
-  const cursor = document.createElement('div');
-  cursor.style.cssText = `
-    position: fixed;
-    left: 0px;
-    top: 0px;
-    width: 75px;
-    height: 75px;
-    border: 1px solid #fff;
-    border-radius: 50%;
-    pointer-events: none;
-    mix-blend-mode: difference;
-    z-index: 9999;
-    display: none;
-    transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease;
-  `;
-  document.body.appendChild(cursor);
-
-  let mouseX = 0, mouseY = 0;
-  let cursorX = 0, cursorY = 0;
-  const speed = 0.1;
-  document.addEventListener('mousemove', (e) => {
-    if (window.innerWidth > 768) {
-      cursor.style.display = 'block';
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    } else {
-      cursor.style.display = 'none';
-    }
-  });
-  function updateCursor() {
-    if (cursor.style.display !== 'none') {
-      cursorX += (mouseX - cursorX) * speed;
-      cursorY += (mouseY - cursorY) * speed;
-      cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
-    }
-    requestAnimationFrame(updateCursor);
-  }
-  updateCursor();
-
-  // Apply cursor interactions
-  document.querySelectorAll('a, button, .btn, nav a, .logo a, .logo p, canvas').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursor.style.width = '15px';
-      cursor.style.height = '15px';
-    });
-    el.addEventListener('mouseleave', () => {
-      cursor.style.width = '75px';
-      cursor.style.height = '75px';
-    });
-  });
-}
-
-/**
- * Loading animation with full border fill synced with percentage
- */
+// --- Loader Animation ---
 function initLoaderKauStyle() { 
-  // Create a main timeline
   const tl = gsap.timeline();
-  // Get the percentage element
   const percentageEl = document.querySelector('.loading__percentage');
   
-  // STARTING STATE - Hide everything initially
+  // Initial States
   tl.set(".loading-container", { autoAlpha: 1 })
-    .set([
-      ".loading__border-top", 
-      ".loading__border-right", 
-      ".loading__border-bottom", 
-      ".loading__border-left"
-    ], { 
-      scaleX: 0, 
-      scaleY: 0 
-    })
-    .set(".loading__percentage", { textContent: "0" })
+    .set([".loading__border-top", ".loading__border-right", ".loading__border-bottom", ".loading__border-left"], 
+         { scaleX: 0, scaleY: 0 })
+    .set(percentageEl, { textContent: "0" })
     .set(".loading-screen", { scale: 0.9, autoAlpha: 0 });
 
-  // Fade in the loading content
-  tl.to(".loading-screen", { 
-    scale: 1, 
-    autoAlpha: 1, 
-    duration: 0.8, 
-    ease: "power2.out" 
-  });
+  // Fade in loading text
+  tl.to(".loading-screen", { scale: 1, autoAlpha: 1, duration: 0.8, ease: "power2.out" });
 
-  // Animate all borders simultaneously with percentage
-  const loadingDuration = 3; // Total loading duration in seconds
-  
-  // Animate borders to fill based on percentage
-  tl.to([
-    ".loading__border-top", 
-    ".loading__border-right", 
-    ".loading__border-bottom", 
-    ".loading__border-left"
-  ], {
+  const loadingDuration = 2.5;
+
+  // Animate Borders
+  tl.to([".loading__border-top", ".loading__border-right", ".loading__border-bottom", ".loading__border-left"], {
     keyframes: [
       { scaleX: 0.25, scaleY: 0.25, duration: loadingDuration * 0.25 },
       { scaleX: 0.5, scaleY: 0.5, duration: loadingDuration * 0.25 },
@@ -168,152 +147,100 @@ function initLoaderKauStyle() {
     ease: "power2.inOut"
   }, 0);
 
-  // Update percentage counter in sync with borders
+  // Animate Percentage
   tl.to(percentageEl, {
     textContent: 100,
     duration: loadingDuration,
     snap: { textContent: 1 },
-    modifiers: {
-      textContent: function(value) {
-        return Math.round(value) + "";
-      }
-    },
     ease: "none"
   }, 0);
 
-  // Add a subtle pulse animation to the percentage
-  tl.to(percentageEl, {
-    scale: 1.05,
-    duration: 0.2,
-    repeat: 3,
-    yoyo: true,
-    ease: "power2.inOut"
-  }, `+=0.3`);
-
-  // EXIT ANIMATION
+  // Exit Animation
   tl.to(".loading-screen", {
     scale: 1.1,
     autoAlpha: 0,
-    duration: 0.6,
+    duration: 0.5,
     ease: "power2.in"
   })
   .to(".loading-container", {
-    autoAlpha: 0,
-    duration: 0.4,
-    ease: "power2.in"
-  }, "-=0.3")
-  .set(".loading-container", { display: "none" });
+    yPercent: -100,
+    duration: 0.8,
+    ease: "power2.inOut"
+  }, "-=0.2");
 
-  // Return the timeline so we can chain animations
   return tl;
 }
 
-/**
- * Finds and animates all elements with .animated-heading or .fade-in
- * --- MODIFIED to exclude hero section ---
- */
+// --- Scroll Animations ---
 function initScrollAnimations() {
-  // Animate elements in each section *except* the hero
-  document.querySelectorAll('.content-section:not(.hero-section)').forEach((section) => {
-    
-    // 1. Animate Headings (word by word)
-    const headings = section.querySelectorAll(".animated-heading");
-    if (headings.length > 0) {
-      let mySplitText = new SplitText(headings, { type: "words, chars" });
-      let chars = mySplitText.chars;
-
-      gsap.set(headings, { visibility: "visible" });
-      gsap.set(chars, { autoAlpha: 0, y: 20 });
-
-      gsap.to(chars, {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.02,
-        ease: "power2.out",
-        scrollTrigger: {
-            trigger: section, 
-            start: "top 70%", 
-            toggleActions: "play none none none"
+  // Select all sections except Hero
+  const animatedSections = document.querySelectorAll('.content-section:not(.hero-section)');
+  
+  animatedSections.forEach((section) => {
+    // 1. Headings (Simple Fade In instead of SplitText)
+    const heading = section.querySelector(".animated-heading");
+    if (heading) {
+      gsap.fromTo(heading, 
+        { y: 30, opacity: 0 },
+        {
+          scrollTrigger: {
+            trigger: section,
+            start: "top 75%",
+          },
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          ease: "power3.out"
         }
-      });
+      );
     }
 
-    // 2. Animate Simple Fade-ins
-    const elementsToFade = section.querySelectorAll(".fade-in");
-    if (elementsToFade.length > 0) {
-      gsap.to(elementsToFade, {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "power2.out",
+    // 2. Fade In Elements
+    const fades = section.querySelectorAll(".fade-in");
+    if(fades.length > 0) {
+      gsap.to(fades, {
         scrollTrigger: {
-            trigger: section, 
-            start: "top 70%",
-            toggleActions: "play none none none"
-        }
+          trigger: section,
+          start: "top 75%",
+        },
+        y: 0,
+        opacity: 1,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "power3.out"
       });
     }
   });
 }
 
-/**
- * === NEW FUNCTION TO ANIMATE HERO ===
- * Animates the hero title, subtitle, and buttons after the loader.
- */
+// --- Hero Animation ---
 function initHeroAnimations() {
   const heroTl = gsap.timeline();
   
-  // 1. Animate Hero Title
-  const heroTitle = document.querySelector(".hero-title");
-  if (heroTitle) {
-    let mySplitText = new SplitText(heroTitle, { type: "words, chars" });
-    let chars = mySplitText.chars;
-    gsap.set(heroTitle, { visibility: "visible" });
-    heroTl.to(chars, { 
-      autoAlpha: 1,
-      y: 0,
-      duration: 0.6,
-      stagger: 0.02,
-      ease: "power2.out"
-    });
+  const title = document.querySelector(".hero-title");
+  if(title) {
+    // Replaced SplitText with a simple scale/fade animation
+    // This is safer and doesn't require premium plugins
+    heroTl.fromTo(title, 
+      { y: 50, opacity: 0, scale: 0.95 }, 
+      { 
+        y: 0, 
+        opacity: 1, 
+        scale: 1,
+        duration: 1.2,
+        ease: "power4.out"
+      }
+    );
   }
 
-  // 2. Animate Subtitle and Buttons (fade in)
-  // We select *only* the fade-in elements in the hero section
   const heroFades = document.querySelectorAll(".hero-section .fade-in");
-  if (heroFades.length > 0) {
-     // Manually set them to their "before" state
-     gsap.set(heroFades, { autoAlpha: 0, y: 20 });
-     
-     heroTl.to(heroFades, {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "power2.out"
-     }, "-=0.5"); // Overlap with title
+  if(heroFades.length > 0) {
+    heroTl.to(heroFades, {
+      y: 0,
+      opacity: 1,
+      stagger: 0.1,
+      duration: 0.8,
+      ease: "power3.out"
+    }, "-=0.8");
   }
 }
-
-// === INITIALIZE EVERYTHING ONCE THE PAGE LOADS ===
-document.addEventListener("DOMContentLoaded", () => {
-  gsap.registerPlugin(ScrollTrigger, SplitText);
-  initLenis();
-  initCustomCursor();
-  
-  // Run the loader and get its timeline
-  const loaderTl = initLoaderKauStyle();
-  
-  initActiveNavigation();
-  
-  // Set up scroll animations for *other* sections
-  initScrollAnimations(); 
-  
-  // Chain the hero animations to the *end* of the loader
-  loaderTl.then(initHeroAnimations);
-
-  // Play the loader
-  loaderTl.play(); 
-});

@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AIrena</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-
+    <title>AIrena | Reinforcement Learning Environment</title>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+    <!-- Removed SplitText to fix invisible text issue -->
     <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrambleTextPlugin.min.js"></script>
-
-    <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
 
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- Loading Screen -->
     <div class="loading-container">
       <div class="loading__border-progress loading__border-top"></div>
       <div class="loading__border-progress loading__border-right"></div>
@@ -28,7 +29,7 @@
       <div class="loading__border-progress loading__border-left"></div>
       <div class="loading-screen">
         <div class="loading__percentage">0</div>
-        <div class="loading__text">Loading</div>
+        <div class="loading__text">Initializing System</div>
       </div>
     </div>
     
@@ -36,131 +37,256 @@
         <header class="header">
             <div class="header-content">
                 <div class="logo">
-                    <a href="#home"><h1>AIrena</h1></a>
-                    <p class="fade-in">(...you know, AI and Arena?)</p>
+                    <a href="#project"><h1>AIrena</h1></a>
+                    <p class="fade-in">Neural Training Ground</p>
                 </div>
                 <nav class="fade-in">
-                    <a href="#project">The Project</a>
-                    <a href="#about">About RL</a>
+                    <a href="#project" class="active">Overview</a>
+                    <a href="#about">Concept</a>
                     <a href="#environment">Environment</a>
                     <a href="#dungeon">Dungeon</a>
                     <a href="#training">Training</a>
-                    <a href="#download">Download</a>
+                    <a href="#download">Get Started</a>
                 </nav>
+                <div style="width: 100px; display: none; lg:block;"></div>
             </div>
         </header>
 
         <main class="main-content">
 
+            <!-- HERO SECTION -->
             <section id="project" class="content-section hero-section">
+                <div class="hero-bg">
+                    <div class="hero-grid"></div>
+                </div>
+                
                 <div class="hero-content">
-                    <h1 class="animated-heading hero-title">Reinforcement Learning, Simplified.</h1>
+                    <div class="fade-in"><span class="hero-badge">v1.0 Release Available</span></div>
+                    
+                    <h1 class="animated-heading hero-title">Reinforcement Learning,<br>Simplified.</h1>
                     
                     <p class="hero-subtitle">
                         <span id="scramble-text">AI training without the setup.</span>
                     </p>
                     
                     <p class="fade-in hero-subtitle-expanded">
-                        AIrena bridges the gap between complex AI research and hands-on learning. 
-                        It's a complete, self-contained package that lets you run and visualize a real Python AI agent 
-                        in a 3D environment. No complex software, no managing dependencies—just
-                        a simple GUI and your browser. This project is built for students, hobbyists, 
-                        and anyone curious about how AI *really* learns.
+                        AIrena bridges the gap between abstract research and hands-on simulation. 
+                        Run a real Python agent in a high-fidelity 3D web environment. 
+                        No dependencies, no config hell—just pure intelligence.
                     </p>
 
                     <div class="hero-actions fade-in">
-                        <a href="#about" class="btn btn-primary btn-large">Explore the Technology</a>
-                        <a href="#download" class="btn btn-outline btn-large">Get Started</a>
+                        <a href="#download" class="btn btn-primary">
+                            <span>Start Training</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="#about" class="btn btn-outline">Learn More</a>
                     </div>
                 </div>
             </section>
+
+            <!-- CONCEPTS SECTION -->
             <section id="about" class="content-section">
                 <h2 class="animated-heading">What is Reinforcement Learning?</h2>
-                <p class="fade-in">
-                    Reinforcement Learning (RL) is a type of machine learning where an agent learns to
-                    make optimal decisions by interacting with its environment. Think of it like training a dog:
-                    the agent takes an action (like 'sit') and receives a **reward** (a treat) or a **penalty** (a "no").
-                    Over millions of trials, it builds a 'policy'—a strategy to maximize its cumulative reward.
-                </p>
-                <a href="#environment" class="btn btn-outline fade-in">See The Environment</a>
+                <div class="content-expanded fade-in">
+                    <p style="text-align: center;">
+                        RL is a paradigm where an <strong>agent</strong> learns to make decisions by performing actions in an 
+                        environment and receiving rewards or penalties. It's trial-and-error at machine speed.
+                    </p>
+                    
+                    <div class="rl-explanation">
+                        <div class="rl-concept">
+                            <h3>🧠 The Brain (Agent)</h3>
+                            <p>Just like training a pet, the agent explores its world. Over millions of steps, it builds a 'policy'—a mathematical strategy to maximize its cumulative reward.</p>
+                            <ul>
+                                <li><strong>Input:</strong> Visual/Sensor data</li>
+                                <li><strong>Processing:</strong> Neural Network (PPO)</li>
+                                <li><strong>Output:</strong> Movement vectors</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rl-concept">
+                            <h3>🌍 The World (Environment)</h3>
+                            <p>The arena defines the rules of physics, the goals, and the consequences. It provides the feedback loop necessary for intelligence to emerge.</p>
+                            <ul>
+                                <li><strong>State:</strong> Current position & obstacles</li>
+                                <li><strong>Reward:</strong> +1 for goal, -0.1 for time</li>
+                                <li><strong>Reset:</strong> On collision or success</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="applications-grid">
+                        <div class="application">
+                            <span class="app-icon">🤖</span>
+                            <span class="app-text">Robotics</span>
+                        </div>
+                        <div class="application">
+                            <span class="app-icon">🎮</span>
+                            <span class="app-text">Game AI</span>
+                        </div>
+                        <div class="application">
+                            <span class="app-icon">🚗</span>
+                            <span class="app-text">Self-Driving</span>
+                        </div>
+                        <div class="application">
+                            <span class="app-icon">📈</span>
+                            <span class="app-text">FinTech</span>
+                        </div>
+                    </div>
+                </div>
             </section>
             
+            <!-- ENVIRONMENT SECTION -->
             <section id="environment" class="content-section">
-                <h2 class="animated-heading">The 3D Web Environment</h2>
-                <p class="fade-in">
-                    The "arena" in AIrena is a custom-built 3D world, streamed directly to your browser.
-                    It's powered by <strong>Three.js</strong>, the standard for 3D web graphics, which handles
-                    the rendering of the agent and the world. To make interactions realistic, the environment uses
-                    <strong>Ammo.js</strong> (a direct port of the Bullet physics engine) for collision detection and physics.
-                </p>
+                <h2 class="animated-heading">High-Fidelity Simulation</h2>
+                <div class="content-expanded fade-in">
+                    <p style="text-align: center;">
+                        The "arena" is a custom-built 3D world, streamed to your browser via WebSockets.
+                        It visualizes the "thinking" process of the AI in real-time.
+                    </p>
+
+                    <div class="tech-grid">
+                        <div class="tech-item">
+                            <strong>Three.js + WebGL</strong>
+                            <p>Hardware-accelerated rendering ensures smooth 60fps visualization of complex agent behaviors and environments.</p>
+                        </div>
+                        <div class="tech-item">
+                            <strong>Ammo.js Physics</strong>
+                            <p>A direct port of the Bullet engine providing realistic collision detection, gravity, and raycasting for sensors.</p>
+                        </div>
+                        <div class="tech-item">
+                            <strong>WebSocket Bridge</strong>
+                            <p>Ultra-low latency communication pipeline connecting the Python "Brain" to the JavaScript "Body".</p>
+                        </div>
+                        <div class="tech-item">
+                            <strong>Dynamic Sensors</strong>
+                            <p>Agents are equipped with Lidar-like raycasts and proximity sensors to perceive the world depth.</p>
+                        </div>
+                    </div>
+                </div>
             </section>
 
+            <!-- DUNGEON DEMO SECTION -->
             <section id="dungeon" class="content-section content-section-split">
                 <div class="text-content fade-in">
-                    <h2 class="animated-heading">A New Challenge, Every Time</h2>
+                    <h2 class="animated-heading">Procedural Generation</h2>
                     <p>
-                        An agent that only masters one level isn't truly intelligent. To ensure the AI
-                        learns to *generalize*, AIrena's environment is procedurally generated for every
-                        training run using the "Rooms and Mazes" algorithm.
+                        Generalization is the holy grail of AI. To prevent the agent from just memorizing a map,
+                        AIrena generates a new dungeon layout for every episode using a modified "Rooms and Mazes" algorithm.
                     </p>
-                    <ul>
-                        <li>Placing random-sized rooms on the map.</li>
-                        <li>Filling all remaining space with perfect mazes.</li>
-                        <li>Finding all "connectors" (walls between two regions).</li>
-                        <li>Opening connectors to merge all regions into one.</li>
-                        <li>Removing dead-ends to create a more open map.</li>
+                    <ul style="list-style: none; color: var(--text-muted); padding-left: 1rem; border-left: 2px solid var(--primary);">
+                        <li style="margin-bottom: 0.5rem">01. Generate random room clusters</li>
+                        <li style="margin-bottom: 0.5rem">02. Fill void with perfect mazes</li>
+                        <li style="margin-bottom: 0.5rem">03. Detect connectors & merge regions</li>
+                        <li style="margin-bottom: 0.5rem">04. Prune dead-ends for flow</li>
                     </ul>
                 </div>
+                
                 <div class="media-content fade-in">
-                    <figure>
-                        <canvas id="enchilada" width="992" height="744">
-                            Sorry, you need canvas support for this demo.
-                        </canvas>
-                    </figure>
-                    <p><em>Click the demo to regenerate.</em></p>
+                    <div class="demo-window">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="window-title">proc_gen_viz.dart</span>
+                        </div>
+                        <figure style="margin:0;">
+                            <!-- DO NOT CHANGE: This is your Dart canvas -->
+                            <canvas id="enchilada" width="992" height="744" style="width: 100%; height: auto; display: block;">
+                                Sorry, you need canvas support for this demo.
+                            </canvas>
+                        </figure>
+                    </div>
+                    <p style="text-align: center; margin-top: 1rem; font-size: 0.85rem; opacity: 0.5;">
+                        Interact with the demo to regenerate layout
+                    </p>
                 </div>
             </section>
 
+            <!-- TRAINING SECTION -->
             <section id="training" class="content-section content-section-split reversed">
                 <div class="media-content fade-in">
-                    <div class="placeholder-box">
-                        <p>Placeholder for training footage (Video/GIF)</p>
+                    <div class="demo-window">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="window-title">training_footage_ep_4000.mp4</span>
+                        </div>
+                        <!-- Placeholder video, replace source with your file -->
+                        <video class="training-video" autoplay loop muted playsinline>
+                            <source src="/training-footage.mp4" type="video/mp4">
+                        </video>
                     </div>
                 </div>
                 <div class="text-content fade-in">
-                    <h2 class="animated-heading">The Brain and The Body</h2>
+                    <h2 class="animated-heading">The Loop</h2>
                     <p>
-                        AIrena runs as two connected parts. The "Brain" is a powerful <strong>Python</strong> agent
-                        using the <strong>Stable Baselines3</strong> library to run algorithms like PPO. The "Body"
-                        is the 3D web visualizer. A WebSocket connects them, allowing the Python agent to
-                        send its actions (like 'move forward') and receive its 'senses' (like wall distance)
-                        to learn from.
+                        The architecture relies on a seamless cycle. The <strong>Brain</strong> (Python + PPO) 
+                        interprets the state of the world and predicts the best move. The <strong>Body</strong> (Three.js) 
+                        simulates the physics resulting from that move.
                     </p>
-                    <div class="placeholder-data">
-                        <p><strong>Algorithm:</strong> PPO</p>
-                        <p><strong>Total Timesteps:</strong> 1,000,000</p>
-                        <p><strong>Mean Reward:</strong> +250.75</p>
+                    
+                    <!-- REPLACED METRICS WITH ARCHITECTURE SPECS -->
+                    <div class="architecture-specs">
+                        <div class="spec-item">
+                            <span class="label">State Space</span>
+                            <p class="value">
+                                The agent perceives the world through 21 Raycast sensors (simulated Lidar), 
+                                its current local velocity, and the relative coordinates of the target.
+                            </p>
+                        </div>
+                        <div class="spec-item">
+                            <span class="label">Action Space</span>
+                            <p class="value">
+                                Continuous control outputs [x, y] mapping to linear acceleration and angular velocity 
+                                for smooth, realistic movement.
+                            </p>
+                        </div>
+                        <div class="spec-item">
+                            <span class="label">Reward Function</span>
+                            <p class="value">
+                                <span style="color: #10b981">+10.0</span> for reaching the goal. 
+                                <span style="color: #ef4444">-1.0</span> for wall collisions. 
+                                A small time-step penalty encourages efficiency.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
 
+            <!-- DOWNLOAD SECTION -->
             <section id="download" class="content-section">
-                <h2 class="animated-heading">Download the Project</h2>
-                <p class="fade-in">
-                    Get the latest stable release from the GitHub repository.
-                    The package includes the GUI, the Python trainer, and the web environment.
-                    No installation required.
+                <h2 class="animated-heading">Ready to Deploy?</h2>
+                <p class="fade-in" style="margin-bottom: 2rem;">
+                    Download the complete package. Includes the Python trainer, the GUI visualizer, 
+                    and the pre-trained models. Open source and MIT licensed.
                 </p>
-                <a href="https://github.com/YOUR-USERNAME/YOUR-REPO/releases" target="_blank" class="btn btn-primary btn-large fade-in">
-                    ⬇️ Download Latest Release
+                <a href="https://github.com/DaranishT/AIrena/tree/v_1.0" target="_blank" class="btn btn-primary fade-in" style="padding: 1.5rem 3rem; font-size: 1.2rem;">
+                    Download Release v1.0
                 </a>
+                
+                <!-- ADDED REQUIREMENTS TAG -->
+                <div class="requirements-tag fade-in">
+                    <span class="req-title">System Req:</span>
+                    <span>Windows / Linux / Mac</span>
+                    <span class="req-sep">•</span>
+                    <span>Python 3.8+</span>
+                    <span class="req-sep">•</span>
+                    <span>4GB RAM</span>
+                </div>
             </section>
 
         </main>
     </div>
-    
-    <script type="module" src="/src/main.js"></script>
 
+    <!-- 
+       =========================================================
+       HIDDEN DART INPUTS (DO NOT REMOVE)
+       These control your maze generation parameters
+       =========================================================
+    -->
     <div style="display: none;">
         <figure>
           <canvas id="rooms"></canvas>
@@ -197,6 +323,12 @@
         </figure>
     </div>
 
+    <!-- MAIN APP SCRIPT -->
+    <!-- Vite handles the import inside main.js automatically -->
+    <script type="module" src="/src/main.js"></script>
+    
+    <!-- YOUR ORIGINAL DART SCRIPT -->
     <script src="/main.dart.js"></script>
+
 </body>
 </html>
